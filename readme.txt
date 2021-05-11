@@ -97,9 +97,9 @@ Congrats! Your form is now ready to collect payments from your customers. Now it
 
 ### Adding a form to a page on our website
 8. Select Pages in the left-hand navigation on your dashboard, then click the name of the page where you’d like to add the form.
-9. Click Add Form above the content editor
+9. Click Add Form above the content editor.
 10. Select the form to embed on the page, adding options for the title, description and ajax, if needed.
-11. Click Insert Form
+11. Click Insert Form.
 12. Publish your page changes by clicking Update in the right column.
 
 Your form has now been added to your website. Give yourself a pat on the back. Next up: Testing your new payment form.
