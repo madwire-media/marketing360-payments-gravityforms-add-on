@@ -61,7 +61,7 @@ The plugin has now been installed and activated on your site. Next up: Connectin
 ### Connecting Gravity Forms to Marketing 360 Payments
 1. On the left-hand navigation menu, hover over Forms and click on Settings.
 2. In the settings menu, select the Marketing 360® Payments tab.
-3. Click the Sign in to your Marketing 360® account button.
+3. Click the Connect to your Marketing 360® account button.
 4. In the pop-up window that displays, login to Marketing 360 with your account username and password.
 5. Click your account name in the pop-up to verify which Marketing 360 account you’d like to connect.
 6. When the connection is authorized, the settings tab will read 'Currently connected to Marketing 360® account: [your account name & number here]'.
