@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Gravity Forms Marketing 360® Payments Add-On
+ * Plugin Name: Marketing 360 Payments for Gravity Forms
  * Plugin URI: https://marketing360.com
  * Description: Integrates Marketing 360® Payments with Gravity Forms, enabling your customers to make safe and secure purchases through Gravity Forms. To get started: activate the plugin and connect to your Marketing 360 Payments account.
  * Version: 1.0
