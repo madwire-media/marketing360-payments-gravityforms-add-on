@@ -112,3 +112,8 @@ Your form has now been added to your website. Give yourself a pat on the back. N
 5. Select Ecommerce from the page navigation.
 6. Confirm that you see your payment (you can also refund it here).
 7. If the transaction is not displayed in your e-Commerce page, call our support team at: [855-462-3343](tel:8554623343).
+
+== Screenshots ==
+1. Connecting your website to your Marketing 360® account takes just seconds.
+2. Include a product, credit card, and total field in each payment form.
+3. Each customer that submits a payment will display in the Marketing 360® Payments app
