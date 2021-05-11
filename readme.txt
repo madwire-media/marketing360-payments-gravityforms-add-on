@@ -1,5 +1,5 @@
 === Gravity Forms Marketing 360® Payments Add-On ===
-Contributors: marketing360-wp
+Contributors: marketing360payments
 Tags: donations, gravity forms, payment, payment gateway
 Requires at least: 4.7
 Tested up to: 5.7
