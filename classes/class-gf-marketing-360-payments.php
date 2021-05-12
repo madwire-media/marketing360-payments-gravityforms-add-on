@@ -187,6 +187,10 @@ class GF_Marketing_360_Payments {
 						continue;
 					}
 
+					if (!isset($details->clientId) || !isset($details->secret)) {
+						continue;
+					}
+
 					$account->client_id = $details->clientId;
 					$account->client_secret = $details->secret;
 					$account->payload = serialize($account);

@@ -52,8 +52,14 @@ class GF_M360_AddOn extends GFPaymentAddOn {
     // The handle for the admin-facing JavaScript
     protected $_admin_js_handle = "gforms_m360_admin";
 
+    // The handle for the admin-facing CSS
+    protected $_admin_css_handle = "gforms_m360_admin";
+
     // The relative path for the admin-facing JavaScript
     protected $_admin_js_path = "/js/admin.js";
+
+    // The relative path for the admin-facing CSS
+    protected $_admin_css_path = "/css/admin.css";
 
     /**
      * Length of time to cache the Bearer Token in seconds
@@ -69,6 +75,11 @@ class GF_M360_AddOn extends GFPaymentAddOn {
         require_once('classes/class-gf-marketing-360-payments.php');
         require_once('classes/class-gf-field-m360-creditcard.php');
 
+    }
+
+    public function render_settings( $sections ) {
+        parent::render_settings($sections);
+        require_once('marketing360-login-page.php');
     }
 
     // Get a singleton instance of this Add-On
@@ -91,15 +102,11 @@ class GF_M360_AddOn extends GFPaymentAddOn {
                     <p><?php echo __("Currently connected to Marketing 360® account: {$details->externalAccountNumber} {$details->displayName}. <a href=\"#\" onclick=\"m360SignOut()\">Disconnect Account</a>", 'gravityformsm360'); ?></p>
                 <?php endif; ?>
             </div>
+
             <button id="gf-m360-api-auth" class="button-secondary">
                 <?php echo __($button_text, 'gravityformsm360'); ?>
             </button>
-            <style>
-                #gf-m360-notice-box p {
-                    margin-bottom: 10px;
-                    margin-top: 0px;
-                }
-            </style>
+
         <?php echo ob_get_clean();
     }
 
@@ -169,16 +176,33 @@ class GF_M360_AddOn extends GFPaymentAddOn {
                     ),
                 ),
                 'strings' => array(
-                    'login_page_url' => plugin_dir_url(__FILE__) . 'marketing360-login-page.php',
-                    'site_url' => trailingslashit(get_site_url()),
+                    'connect_url' => get_rest_url(null, 'gf_marketing_360_payments/' . GF_Marketing_360_Payments::VER . '/sign_in'),
                     'nonce' => wp_create_nonce('wp_rest'),
                     'stripe_key' => $this->get_stripe_key(),
-                    'ver' => GF_Marketing_360_Payments::VER
                 )
             ),
         );
 
         return array_merge(parent::scripts(), $scripts);
+    }
+
+    // Return the styles which should be enqueued.
+    public function styles() {
+        $styles = array(
+            array(
+                'handle'    => $this->_admin_css_handle,
+                'src'       => $this->get_base_url() . $this->_admin_css_path,
+                'version'   => $this->_version . time(),
+                'enqueue'   => array(
+                    array(
+                        'admin_page' => array( 'plugin_settings', 'form_settings' ),
+                        'tab'        => array( $this->get_slug(), $this->get_short_title() ),
+                    ),
+                )
+            ),
+        );
+
+        return array_merge(parent::styles(), $styles);
     }
 
     // Generates the markup for the SSL error message field.
