@@ -13,7 +13,7 @@
 defined( 'ABSPATH' ) || die();
 
 //Required constants
-define( 'GF_M360_VERSION', '1.0' );
+define( 'GF_M360_VERSION', '1.0.1' );
 define(	'GF_M360_URL', plugin_dir_url(__FILE__));
 define(	'GF_M360_PATH', plugin_dir_path(__FILE__));
 
