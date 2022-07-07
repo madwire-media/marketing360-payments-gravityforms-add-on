@@ -90,6 +90,7 @@ class GF_Marketing_360_Payments {
 		return [
 			'Authorization'					=> 'Bearer ' . $token,
 			'Marketing360-Account'			=> $account,
+			'Marketing360-Payments-Source'	=> self::INTEGRATION_ID
 		];
 	}
 
@@ -179,7 +180,6 @@ class GF_Marketing_360_Payments {
 
 			if ($accounts) {
 				foreach($accounts as $index => &$account) {
-					//var_dump($account);
 					$details = self::get_m360_account_details($token, $account->accountNumber);
 
 					if (is_wp_error($details) || isset($account->details->errors)) {

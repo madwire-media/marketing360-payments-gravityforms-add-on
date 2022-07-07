@@ -3,7 +3,7 @@
  * Plugin Name: Gravity Forms Marketing 360® Payments Add-On
  * Plugin URI: https://marketing360.com
  * Description: Integrates Marketing 360® Payments with Gravity Forms, enabling your customers to make safe and secure purchases through Gravity Forms. To get started: activate the plugin and connect to your Marketing 360 Payments account.
- * Version: 1.0.1
+ * Version: 1.0.4
  * Author: Marketing 360®
  * Author URI: https://marketing360.com
  * License: GPL-2.0+
@@ -13,7 +13,7 @@
 defined( 'ABSPATH' ) || die();
 
 //Required constants
-define( 'GF_M360_VERSION', '1.0.1' );
+define( 'GF_M360_VERSION', '1.0.4' );
 define(	'GF_M360_URL', plugin_dir_url(__FILE__));
 define(	'GF_M360_PATH', plugin_dir_path(__FILE__));
 
@@ -47,7 +47,6 @@ add_action('rest_api_init', function() {
 	register_rest_route('gf_marketing_360_payments/' . GF_Marketing_360_Payments::VER, '/sign_in', array(
 		'methods' => 'POST',
 		'callback' => 'GF_Marketing_360_Payments::rest_list_m360_accounts',
-		'permission_callback' => '__return_true',
 	));
 }, 10);
 
@@ -82,3 +81,13 @@ function gf_m360_plugin_options($links) {
 	return $links;
 }
 add_filter("plugin_action_links_$plugin", "gf_m360_plugin_options", 10, 4);
+
+// Render the signin popup in the admin footer, only when on the current subview of the Gravity Forms settings page.
+add_action('admin_footer', function() {
+	if (!function_exists('get_current_screen')) {
+		return;
+	}
+	if (get_current_screen()->base == "forms_page_gf_settings" && isset($_GET['subview']) && $_GET['subview'] == 'gravityforms-marketing-360-payments') {
+        require_once('marketing360-login-page.php');
+	}
+});

@@ -64,12 +64,12 @@ class GF_Field_M360_CreditCard extends GF_Field {
 		$sub_label_class_attribute = $field_sub_label_placement === 'hidden_label' ? "class='hidden_sub_label screen-reader-text'" : '';
 
 		$card_details_input     = GFFormsModel::get_input( $this, $this->id . '.1' );
-		$card_details_sub_label = rgar( $card_details_input, 'customLabel', esc_html__( 'Card Details', 'gravityformsm360' ) );
+		$card_details_sub_label = rgar( $card_details_input, 'customLabel' ) !== '' ? $card_details_input['customLabel'] : esc_html__( 'Card Details', 'gravityformsm360' );
 		$card_details_sub_label = gf_apply_filters( array( 'gform_card_details', $form_id, $this->id ), $card_details_sub_label, $form_id );
 
 		$cardholder_name_input      = GFFormsModel::get_input( $this, $this->id . '.5' );
 		$hide_cardholder_name       = rgar( $cardholder_name_input, 'isHidden' );
-		$cardholder_name_sub_label  = rgar( $cardholder_name_input, 'customLabel', esc_html__( 'Cardholder Name', 'gravityformsm360' ) );
+		$cardholder_name_sub_label  = rgar( $cardholder_name_input, 'customLabel' ) !== '' ? $cardholder_name_input['customLabel'] : esc_html__( 'Cardholder Name', 'gravityformsm360' );
 		$cardholder_name_sub_label  = gf_apply_filters( array( 'gform_card_name', $form_id, $this->id ), $cardholder_name_sub_label, $form_id );
 		$cardholder_name_placehoder = $this->get_input_placeholder_attribute( $cardholder_name_input );
 
@@ -85,7 +85,7 @@ class GF_Field_M360_CreditCard extends GF_Field {
 		$account_details = gf_m360()->get_account_details();
 		$stripe_key = gf_m360()->get_stripe_key();
 
-		$card_wrap_id = "gf-m360-payments-card-" . $form_id . "-" .$field_id ;
+		$card_wrap_id = "gf-m360-payments-card-" . $form_id . "-" .$field_id;
 
 		// If we are in the form editor, display a placeholder field.
 		if ($is_admin) {
