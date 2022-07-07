@@ -47,6 +47,9 @@ add_action('rest_api_init', function() {
 	register_rest_route('gf_marketing_360_payments/' . GF_Marketing_360_Payments::VER, '/sign_in', array(
 		'methods' => 'POST',
 		'callback' => 'GF_Marketing_360_Payments::rest_list_m360_accounts',
+		'permission_callback' => function() {
+			return current_user_can('manage_options');
+		}
 	));
 }, 10);
 
