@@ -67,6 +67,12 @@ class GF_M360_AddOn extends GFPaymentAddOn {
      */
     const TOKEN_EXPIRATION_LENGTH_IN_SECONDS = 240;
 
+    // The capability needed to uninstall the Add-On.
+    protected $_capabilities_uninstall = 'gravityforms_m360_uninstall';
+
+    // The capabilities needed for the Marketing 360 Payments Add-On
+    protected $_capabilities = array( 'gravityforms_m360', 'gravityforms_m360_uninstall' );
+
     // Fires before the WordPress action "init" fires
     public function pre_init() {
 
@@ -75,11 +81,6 @@ class GF_M360_AddOn extends GFPaymentAddOn {
         require_once('classes/class-gf-marketing-360-payments.php');
         require_once('classes/class-gf-field-m360-creditcard.php');
 
-    }
-
-    public function render_settings( $sections ) {
-        parent::render_settings($sections);
-        require_once('marketing360-login-page.php');
     }
 
     // Get a singleton instance of this Add-On
@@ -241,12 +242,9 @@ class GF_M360_AddOn extends GFPaymentAddOn {
 
     // Gets the full Account Details object.
     public function get_account_details() {
-        if (current_user_can('update_core')) {
-            return @unserialize(
-                $this->get_plugin_setting('m360_account_details')
-            );
-        }
-        return null;
+        return @unserialize(
+            $this->get_plugin_setting('m360_account_details')
+        );
     }
 
     // Overwrites the account details object
@@ -258,41 +256,32 @@ class GF_M360_AddOn extends GFPaymentAddOn {
 
     // Get the Stripe Key from the full account details object.
     public function get_stripe_key() {
-        return $this->get_account_details() ? $this->get_account_details()->stripeKey : "";
+        if ($this->get_account_details()) {
+            return $this->get_account_details()->stripeKey;
+        }
+        return null;
     }
 
     // Get the Marketing 360 Account ID from the full account details object.
     public function get_account() {
-        if (current_user_can('update_core')) {
-            if ($this->get_account_details()) {
-                return $this->get_account_details()->accountNumber;
-            } else {
-                return "";
-            }
+        if ($this->get_account_details()) {
+            return $this->get_account_details()->accountNumber;
         }
         return null;
     }
 
     // Get the Marketing 360 Client ID from the full account details object.
     public function get_client_id() {
-        if (current_user_can('update_core')) {
-            if ($this->get_account_details()) {
-                return $this->get_account_details()->client_id;
-            } else {
-                return "";
-            }
+        if ($this->get_account_details()) {
+            return $this->get_account_details()->client_id;
         }
         return null;
     }
 
     // Get the Marketing 360 Client Secret from the full account details object.
     public function get_client_secret() {
-        if (current_user_can('update_core')) {
-            if ($this->get_account_details()) {
-                return $this->get_account_details()->client_secret;
-            } else {
-                return "";
-            }
+        if ($this->get_account_details()) {
+            return $this->get_account_details()->client_secret;
         }
         return null;
     }
@@ -357,72 +346,15 @@ class GF_M360_AddOn extends GFPaymentAddOn {
                         'onchange' => "jQuery(this).parents('form').submit();",
                         'choices'  => array(
                             array(
-                                'label' => esc_html__( 'Select a transaction type', 'gravityformsm360' ),
-                                'value' => ''
-                            ),
-                            array(
                                 'label' => esc_html__( 'Products and Services', 'gravityformsm360' ),
                                 'value' => 'product'
                             ),
-                            array( 'label' => esc_html__( 'Subscription', 'gravityformsm360' ), 'value' => 'subscription' ),
-                        ),
-                        'tooltip'  => '<h6>' . esc_html__( 'Transaction Type', 'gravityforms' ) . '</h6>' . esc_html__( 'Select a transaction type.', 'gravityformsm360' )
-                    ),
-                )
-            ),
-            array(
-                'title'      => esc_html__( 'Subscription Settings', 'gravityformsm360' ),
-                'dependency' => array(
-                    'field'  => 'transactionType',
-                    'values' => array( 'subscription' )
-                ),
-                'fields'     => array(
-                    array(
-                        'name'     => 'recurringAmount',
-                        'label'    => esc_html__( 'Recurring Amount', 'gravityformsm360' ),
-                        'type'     => 'select',
-                        'choices'  => $this->recurring_amount_choices(),
-                        'required' => true,
-                        'tooltip'  => '<h6>' . esc_html__( 'Recurring Amount', 'gravityforms' ) . '</h6>' . esc_html__( "Select which field determines the recurring payment amount, or select 'Form Total' to use the total of all pricing fields as the recurring amount.", 'gravityformsm360' )
-                    ),
-                    array(
-                        'name'    => 'billingCycle',
-                        'label'   => esc_html__( 'Billing Cycle', 'gravityformsm360' ),
-                        'type'    => 'billing_cycle',
-                        'tooltip' => '<h6>' . esc_html__( 'Billing Cycle', 'gravityformsm360' ) . '</h6>' . esc_html__( 'Select your billing cycle.  This determines how often the recurring payment should occur.', 'gravityformsm360' )
-                    ),
-                    array(
-                        'name'    => 'recurringTimes',
-                        'label'   => esc_html__( 'Recurring Times', 'gravityformsm360' ),
-                        'type'    => 'select',
-                        'choices' => array(
-                                         array(
-                                             'label' => esc_html__( 'infinite', 'gravityformsm360' ),
-                                             'value' => '0'
-                                         )
-                                     ) + $this->get_numeric_choices( 1, 100 ),
-                        'tooltip' => '<h6>' . esc_html__( 'Recurring Times', 'gravityformsm360' ) . '</h6>' . esc_html__( 'Select how many times the recurring payment should be made.  The default is to bill the customer until the subscription is canceled.', 'gravityformsm360' )
-                    ),
-                    array(
-                        'name'  => 'setupFee',
-                        'label' => esc_html__( 'Setup Fee', 'gravityformsm360' ),
-                        'type'  => 'setup_fee',
-                    ),
-                    array(
-                        'name'    => 'trial',
-                        'label'   => esc_html__( 'Trial', 'gravityformsm360' ),
-                        'type'    => 'trial',
-                        'hidden'  => $this->get_setting( 'setupFee_enabled' ),
-                        'tooltip' => '<h6>' . esc_html__( 'Trial Period', 'gravityformsm360' ) . '</h6>' . esc_html__( 'Enable a trial period.  The user\'s recurring payment will not begin until after this trial period.', 'gravityformsm360' )
+                        )
                     ),
                 )
             ),
             array(
                 'title'      => esc_html__( 'Products &amp; Services Settings', 'gravityformsm360' ),
-                'dependency' => array(
-                    'field'  => 'transactionType',
-                    'values' => array( 'product', 'donation' )
-                ),
                 'fields'     => array(
                     array(
                         'name'          => 'paymentAmount',
@@ -437,10 +369,6 @@ class GF_M360_AddOn extends GFPaymentAddOn {
             ),
             array(
                 'title'      => esc_html__( 'Other Settings', 'gravityformsm360' ),
-                'dependency' => array(
-                    'field'  => 'transactionType',
-                    'values' => array( 'subscription', 'product', 'donation' )
-                ),
                 'fields'     => $this->other_settings_fields()
             ),
 
@@ -458,16 +386,6 @@ class GF_M360_AddOn extends GFPaymentAddOn {
                 'tooltip'   => '<h6>' . esc_html__( 'Billing Information', 'gravityformsm360' ) . '</h6>' . esc_html__( 'Map your Form Fields to the available listed fields.', 'gravityformsm360' )
             ),
         );
-
-        $option_choices = $this->option_choices();
-        if ( ! empty( $option_choices ) ) {
-            $other_settings[] = array(
-                'name'    => 'min_transaction_amount',
-                'label'   => esc_html__( 'Minimum Transaction Amount', 'gravityformsm360' ),
-                'type'    => 'checkbox',
-                'choices' => $option_choices,
-            );
-        }
 
         $other_settings[] = array(
             'name'    => 'conditionalLogic',
@@ -511,6 +429,16 @@ class GF_M360_AddOn extends GFPaymentAddOn {
         $amount = intval($payment_amount * 100);
         $payment_method_data = $this->get_payment_method_data();
 
+        $product_names = array();
+
+        $products = GFCommon::get_product_fields( $form, $entry, true )['products'];
+
+        foreach($products as $product) {
+            $product_names[] = $product['name'];
+        }
+
+        $description = implode(", ", $product_names);
+
         $payment_intent = GF_Marketing_360_Payments::create_payment_intent([
             'amount' => $amount,
             'receipt_email' => $email,
@@ -518,7 +446,8 @@ class GF_M360_AddOn extends GFPaymentAddOn {
             'customer' => $customer_id,
             'setup_future_usage' => 'off_session',
             'payment_method_data' => $payment_method_data,
-            'capture_method' => 'manual'
+            'capture_method' => 'manual',
+            'description' => $description
         ]);
 
         if (is_wp_error($payment_intent)) {
@@ -660,5 +589,10 @@ class GF_M360_AddOn extends GFPaymentAddOn {
         $validation_result['is_valid']         = false;
 
         return $validation_result;
+    }
+
+    // Hide the uninstall button (purposefully empty function)
+    public function render_uninstall() {
+
     }
 }
