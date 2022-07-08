@@ -93,17 +93,17 @@ class GF_Field_M360_CreditCard extends GF_Field {
 			if (empty($client_token)) {
 				ob_start(); ?>
 					<div class="notice notice-error inline">
-						<p><b>Hold up!</b> You haven't connected to a Marketing 360® account yet. Please <a href="<?php echo $settings_url; ?>">check your Marketing 360® Payments settings</a>.</p>
+					<p><b>Hold up!</b> You haven't connected to a Marketing 360® account yet. Please <a href="<?php esc_url( $settings_url ); ?>">check your Marketing 360® Payments settings</a>.</p>
 					</div>
 				<?php return ob_get_clean();
 			}
 			// Display a disabled placeholder field.
 			ob_start(); ?>
 
-				<div id="<?php echo $card_wrap_id; ?>"></div>
+				<div id="<?php esc_html_e( $card_wrap_id ); ?>"></div>
 
 				<script>
-					TryMountCardAdminField("#<?php echo $card_wrap_id; ?>");
+					TryMountCardAdminField("#<?php esc_html_e( $card_wrap_id ); ?>");
 				</script>
 
 			<?php return ob_get_clean();
@@ -112,23 +112,23 @@ class GF_Field_M360_CreditCard extends GF_Field {
 			$input_id = $card_wrap_id . "_token_input";
 			ob_start(); ?>
 
-				<div id="<?php echo $card_wrap_id; ?>"></div>
-				<input id="<?php echo $input_id; ?>" type="hidden" name="stripe_response" value="<?php echo $value; ?>">
+				<div id="<?php esc_html_e( $card_wrap_id ); ?>"></div>
+				<input id="<?php esc_html_e( $input_id ); ?>" type="hidden" name="stripe_response" value="<?php esc_html_e( $value ); ?>">
 
 				<script>
-					const stripeKey = "<?php echo $stripe_key; ?>";
-					const stripeAccountId = "<?php echo $account_details->stripeAccountId; ?>";
+					const stripeKey = "<?php esc_html_e( $stripe_key ); ?>";
+					const stripeAccountId = "<?php esc_html_e( $account_details->stripeAccountId ); ?>";
 					const stripe = Stripe(stripeKey, {
 						stripeAccount: stripeAccountId
 					});
 					const elements = stripe.elements();
 					const cardElement = elements.create('card');
-					cardElement.mount("#<?php echo $card_wrap_id; ?>");
+					cardElement.mount("#<?php esc_html_e( $card_wrap_id ); ?>");
 
 					cardElement.on('change', event => {
 
 						stripe.createToken(cardElement).then(result => {
-							jQuery('#<?php echo $input_id; ?>').val(JSON.stringify(result));
+							jQuery('#<?php esc_html_e( $input_id ); ?>').val(JSON.stringify(result));
 						})
 					})
 				</script>
