@@ -17,7 +17,7 @@ class GF_Field_M360_CreditCard extends GF_Field {
 
 	// Additional JS to be included when this field type is loaded
 	public function get_form_editor_inline_script_on_page_render() {
-		$js = sprintf( "function SetDefaultValues_%s(field) {field.label = '%s';}", $this->type, esc_html__( 'Credit Card', 'gravityformsm360' ));
+		$js = sprintf( "function SetDefaultValues_%s(field) {field.label = '%s';}", esc_attr($this->type), __( 'Credit Card', 'gravityformsm360' ));
 		return $js;
 	}
 
@@ -64,12 +64,12 @@ class GF_Field_M360_CreditCard extends GF_Field {
 		$sub_label_class_attribute = $field_sub_label_placement === 'hidden_label' ? "class='hidden_sub_label screen-reader-text'" : '';
 
 		$card_details_input     = GFFormsModel::get_input( $this, $this->id . '.1' );
-		$card_details_sub_label = rgar( $card_details_input, 'customLabel', esc_html__( 'Card Details', 'gravityformsm360' ) );
+		$card_details_sub_label = rgar( $card_details_input, 'customLabel', __( 'Card Details', 'gravityformsm360' ) );
 		$card_details_sub_label = gf_apply_filters( array( 'gform_card_details', $form_id, $this->id ), $card_details_sub_label, $form_id );
 
 		$cardholder_name_input      = GFFormsModel::get_input( $this, $this->id . '.5' );
 		$hide_cardholder_name       = rgar( $cardholder_name_input, 'isHidden' );
-		$cardholder_name_sub_label  = rgar( $cardholder_name_input, 'customLabel', esc_html__( 'Cardholder Name', 'gravityformsm360' ) );
+		$cardholder_name_sub_label  = rgar( $cardholder_name_input, 'customLabel', __( 'Cardholder Name', 'gravityformsm360' ) );
 		$cardholder_name_sub_label  = gf_apply_filters( array( 'gform_card_name', $form_id, $this->id ), $cardholder_name_sub_label, $form_id );
 		$cardholder_name_placehoder = $this->get_input_placeholder_attribute( $cardholder_name_input );
 

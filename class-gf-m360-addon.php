@@ -100,12 +100,12 @@ class GF_M360_AddOn extends GFPaymentAddOn {
             $button_text = ($details) ? 'Connect to a different Marketing 360® account' : 'Connect to your Marketing 360® account'; ?>
             <div id="gf-m360-notice-box">
                 <?php if ($details): ?>
-                    <p><?php echo __("Currently connected to Marketing 360® account: {$details->externalAccountNumber} {$details->displayName}. <a href=\"#\" onclick=\"m360SignOut()\">Disconnect Account</a>", 'gravityformsm360'); ?></p>
+                    <p><?php echo sprintf( __( 'Currently connected to Marketing 360® account: %s %s. ', 'gravityformsm360' ), esc_html( $details->externalAccountNumber ), esc_html( $details->displayName ));?><a href="#" onclick="m360SignOut()">Disconnect Account</a></p>
                 <?php endif; ?>
             </div>
 
             <button id="gf-m360-api-auth" class="button-secondary">
-                <?php echo __($button_text, 'gravityformsm360'); ?>
+                <?php echo esc_html($button_text); ?>
             </button>
 
         <?php echo ob_get_clean();
@@ -115,7 +115,7 @@ class GF_M360_AddOn extends GFPaymentAddOn {
     public function plugin_settings_fields() {
         $fields = array(
             array(
-                'title' => esc_html('Marketing 360® Account', 'gravityformsm360'),
+                'title' => __('Marketing 360® Account', 'gravityformsm360'),
                 'fields' => $this->api_settings_fields()
             )
         );
@@ -209,13 +209,13 @@ class GF_M360_AddOn extends GFPaymentAddOn {
     // Generates the markup for the SSL error message field.
     public function settings_ssl_error( $field, $echo = true ) {
         $html = $this->_has_settings_renderer ? '<div class="alert gforms_note_error">' : '<div class="alert_red" style="padding:20px; padding-top:5px;">';
-        $html .= '<h4>' . esc_html__( 'SSL Certificate Required', 'gravityformsm360' ) . '</h4>';
+        $html .= '<h4>' . __( 'SSL Certificate Required', 'gravityformsm360' ) . '</h4>';
         /* Translators: 1: Open link tag 2: Close link tag */
-        $html .= sprintf( esc_html__( 'Make sure you have an SSL certificate installed and enabled, then %1$sclick here to reload the settings page%2$s.', 'gravityformsm360' ), '<a href="' . $this->get_settings_page_url() . '">', '</a>' );
+        $html .= sprintf( __( 'Make sure you have an SSL certificate installed and enabled, then %1$sclick here to reload the settings page%2$s.', 'gravityformsm360' ), '<a href="' . esc_url($this->get_settings_page_url()) . '">', '</a>' );
         $html .= '</div>';
 
         if ( $echo ) {
-            echo $html;
+            echo esc_html($html);
         }
 
         return $html;
@@ -333,7 +333,7 @@ class GF_M360_AddOn extends GFPaymentAddOn {
                 'fields'      => array(
                     array(
                         'name'     => 'feedName',
-                        'label'    => esc_html__( 'Name', 'gravityformsm360' ),
+                        'label'    => __( 'Name', 'gravityformsm360' ),
                         'type'     => 'text',
                         'class'    => 'medium',
                         'required' => true,
@@ -341,12 +341,12 @@ class GF_M360_AddOn extends GFPaymentAddOn {
                     ),
                     array(
                         'name'     => 'transactionType',
-                        'label'    => esc_html__( 'Transaction Type', 'gravityformsm360' ),
+                        'label'    => __( 'Transaction Type', 'gravityformsm360' ),
                         'type'     => 'select',
                         'onchange' => "jQuery(this).parents('form').submit();",
                         'choices'  => array(
                             array(
-                                'label' => esc_html__( 'Products and Services', 'gravityformsm360' ),
+                                'label' => __( 'Products and Services', 'gravityformsm360' ),
                                 'value' => 'product'
                             ),
                         )
@@ -354,11 +354,11 @@ class GF_M360_AddOn extends GFPaymentAddOn {
                 )
             ),
             array(
-                'title'      => esc_html__( 'Products &amp; Services Settings', 'gravityformsm360' ),
+                'title'      => __( 'Products &amp; Services Settings', 'gravityformsm360' ),
                 'fields'     => array(
                     array(
                         'name'          => 'paymentAmount',
-                        'label'         => esc_html__( 'Payment Amount', 'gravityformsm360' ),
+                        'label'         => __( 'Payment Amount', 'gravityformsm360' ),
                         'type'          => 'select',
                         'choices'       => $this->product_amount_choices(),
                         'required'      => true,
@@ -368,7 +368,7 @@ class GF_M360_AddOn extends GFPaymentAddOn {
                 )
             ),
             array(
-                'title'      => esc_html__( 'Other Settings', 'gravityformsm360' ),
+                'title'      => __( 'Other Settings', 'gravityformsm360' ),
                 'fields'     => $this->other_settings_fields()
             ),
 
@@ -380,7 +380,7 @@ class GF_M360_AddOn extends GFPaymentAddOn {
         $other_settings = array(
             array(
                 'name'      => 'billingInformation',
-                'label'     => esc_html__( 'Billing Information', 'gravityformsm360' ),
+                'label'     => __( 'Billing Information', 'gravityformsm360' ),
                 'type'      => 'field_map',
                 'field_map' => $this->billing_info_fields(),
                 'tooltip'   => '<h6>' . esc_html__( 'Billing Information', 'gravityformsm360' ) . '</h6>' . esc_html__( 'Map your Form Fields to the available listed fields.', 'gravityformsm360' )
@@ -389,7 +389,7 @@ class GF_M360_AddOn extends GFPaymentAddOn {
 
         $other_settings[] = array(
             'name'    => 'conditionalLogic',
-            'label'   => esc_html__( 'Conditional Logic', 'gravityformsm360' ),
+            'label'   => __( 'Conditional Logic', 'gravityformsm360' ),
             'type'    => 'feed_condition',
             'tooltip' => '<h6>' . esc_html__( 'Conditional Logic', 'gravityformsm360' ) . '</h6>' . esc_html__( 'When conditions are enabled, form submissions will only be sent to the payment gateway when the conditions are met. When disabled, all form submissions will be sent to the payment gateway.', 'gravityformsm360' )
         );
