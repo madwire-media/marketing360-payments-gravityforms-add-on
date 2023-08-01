@@ -1,8 +1,8 @@
 === Marketing 360® Payments for Gravity Forms ===
 Contributors: marketing360payments
 Tags: donations, gravity forms, payment, payment gateway
-Requires at least: 5.4
-Tested up to: 6.0
+Requires at least: 6.0
+Tested up to: 6.2.2
 Requires PHP: 7.0
 Stable tag: 1.0.5
 License: GPLv2

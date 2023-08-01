@@ -426,7 +426,7 @@ class GF_M360_AddOn extends GFPaymentAddOn {
         $payment_amount = $submission_data['payment_amount'];
         $email = $submission_data['email'];
         $currency = strtolower(rgar($entry, 'currency'));
-        $amount = intval($payment_amount * 100);
+        $amount = strval(round($payment_amount, 2) * 100);
         $payment_method_data = $this->get_payment_method_data();
 
         $product_names = array();
