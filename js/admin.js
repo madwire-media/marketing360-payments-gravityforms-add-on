@@ -4,8 +4,8 @@
 
 /* global jQuery, gforms_stripe_admin_strings */
 
-(function($) {
-	$(document).ready(function() {
+(function ($) {
+	$(document).ready(function () {
 		RegisterEvents();
 	});
 
@@ -22,68 +22,90 @@
 		const signInForm = $('#gf-m360-signin-popup-form-login');
 
 		signInPopup
-		.show()
-		.off()
-		.click(function(e) {
-			if (e.target === this) {
-				$(this).hide();
-			}
-		})
+			.show()
+			.off()
+			.click(function (e) {
+				if (e.target === this) {
+					$(this).hide();
+				}
+			})
 
 		signInForm.submit(onFormSubmit);
 	}
 
 	// Handle the form submission inside the prompt
 	function onFormSubmit(e) {
-        e.preventDefault();
-        
-        const form = e.target;
+		e.preventDefault();
 
-        const accountsList = $('#gf-m360-signin-popup-accounts-list');
-        const accountsListSubHeading = $('#gf-m360-signin-popup-subtitle');
-        const contentWrapper = $('#gf-m360-signin-popup-content-wrapper');
+		const form = e.target;
 
-        $('#gf-m360-signin-popup-login').val("Connecting...");
+		const accountsList = $('#gf-m360-signin-popup-accounts-list');
+		const accountsListSubHeading = $('#gf-m360-signin-popup-subtitle');
+		const contentWrapper = $('#gf-m360-signin-popup-content-wrapper');
 
-        $.ajax({
-            url: gforms_m360_admin_strings['connect_url'],
-            method: form.method,
-            data: $(this).serialize()
-        })
-        .done(function(response) {
-            if (Array.isArray(response)) {
-                contentWrapper.hide();
-                accountsList.show();
-                accountsListSubHeading.show();
-                response.forEach(function(account) {
-                    const html = $(account.html);
+		$('#gf-m360-signin-popup-login').val("Connecting...");
 
-                    delete account.html;
-                    html.click(function() {
-                    	$('#m360_account_details').val(account.payload);
-                        $('#gf-m360-signin-popup-wrap').hide();
-                		contentWrapper.show();
-				        accountsList.hide();
-				        accountsListSubHeading.hide();
+		$.ajax({
+			url: gforms_m360_admin_strings['connect_url'],
+			method: form.method,
+			data: $(this).serialize(),
+			headers: {
+				'X-WP-Nonce': gforms_m360_admin_strings['nonce']
+			}
+		})
+			.done(function (response) {
+				if (Array.isArray(response)) {
+					contentWrapper.hide();
+					accountsList.show();
+					accountsListSubHeading.show();
+					response.forEach(function (account) {
 
-						const notice = `
-							<p>Currently connected to Marketing 360® account: ${account.externalAccountNumber} ${account.displayName}. Please click "Update Settings" to enable payments. <a href="#" onclick="m360SignOut()">Disconnect Account</a></p>
-						`;
+						delete account.html;
 
-						$('#gf-m360-notice-box').html(notice);
-						$('#gf-m360-api-auth').text('Connect to a different Marketing 360® account');
-                    })
-                    accountsList.append(html);
-                });
-            }
-        })
-        .error(function(response) {
-            $('#alert-error').text(response.responseText);
+						const accountDiv = $('<div>').addClass('m360-account');
+						const accountInfo = $('<div>').addClass('m360-account-info');
+						const displayName = $('<h2>').addClass('display-name').text(account.displayName);
+						const accountNumber = $('<h3>').addClass('account-number').text(account.externalAccountNumber);
 
-            $('#gf-m360-signin-popup-login').val("Connect");
-            console.error(response);
-        })
-    }
+						accountInfo.append(displayName, accountNumber);
+						accountDiv.append(accountInfo);
+
+						accountDiv.click(function () {
+							$('#m360_account_details').val(account.payload);
+							$('#gf-m360-signin-popup-wrap').hide();
+							contentWrapper.show();
+							accountsList.hide();
+							accountsListSubHeading.hide();
+
+							const noticeP = $('<p>');
+							noticeP.append(
+								document.createTextNode(
+									'Currently connected to Marketing 360® account: ' +
+									account.externalAccountNumber + ' ' + account.displayName +
+									'. Please click "Update Settings" to enable payments. '
+								)
+							);
+							const disconnectLink = $('<a>').attr('href', '#').text('Disconnect Account').click(function (e) {
+								e.preventDefault();
+								m360SignOut();
+							});
+							noticeP.append(disconnectLink);
+
+							$('#gf-m360-notice-box').empty().append(noticeP);
+							$('#gf-m360-api-auth').text('Connect to a different Marketing 360® account');
+						});
+
+						accountsList.append(accountDiv);
+					});
+				}
+			})
+			.error(function (response) {
+				$('#alert-error').text(response.responseText);
+
+				$('#gf-m360-signin-popup-login').val("Connect");
+				console.error(response);
+			})
+	}
 })(jQuery);
 
 // Display a disabled Stripe Card Field (for form editor)
