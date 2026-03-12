@@ -211,6 +211,8 @@ class GF_Marketing_360_Payments
 
 					$account->client_id = $details->clientId;
 					$account->client_secret = $details->secret;
+					// Store the numeric external account number so the callback can pass it as the Marketing360-Account header.
+					$account->externalAccountNumber_stored = $account->externalAccountNumber;
 					$account->payload = json_encode($account);
 
 					ob_start(); ?>
@@ -313,7 +315,6 @@ class GF_Marketing_360_Payments
 		}
 
 		$response_code = $response['response']['code'];
-		error_log( 'GF_M360: get_stripe_details full body: ' . $response['body'] );
 
 		if ($response_code !== 200) {
 			return new WP_Error($response_code, $response['response']['message']);
@@ -329,57 +330,64 @@ class GF_Marketing_360_Payments
 			return $field_setting;
 		}
 
-		// GF may pass the value as a JSON string or as an already-decoded array.
+		// GF may pass the value back as a JSON string or as an already-decoded array/object.
 		if ( is_array( $field_setting ) ) {
 			$u_field_setting = (object) $field_setting;
+		} elseif ( is_object( $field_setting ) ) {
+			$u_field_setting = $field_setting;
 		} elseif ( is_string( $field_setting ) ) {
 			$u_field_setting = json_decode( $field_setting );
 			if ( ! $u_field_setting || json_last_error() !== JSON_ERROR_NONE ) {
-				error_log( 'GF_M360: Skipping — could not decode field_setting JSON. Value: ' . $field_setting );
 				return $field_setting;
 			}
 		} else {
-			error_log( 'GF_M360: Skipping — unexpected field_setting type: ' . gettype( $field_setting ) );
 			return $field_setting;
 		}
 
 		if ( ! isset( $u_field_setting->client_id, $u_field_setting->client_secret, $u_field_setting->accountNumber ) ) {
-			error_log( 'GF_M360: Skipping — missing required fields. Keys present: ' . implode( ', ', array_keys( (array) $u_field_setting ) ) );
 			return $field_setting;
 		}
 
-		// If stripeKey is already set, no need to fetch again.
+		// If stripeKey is already stored in the payload, skip the API call.
 		if ( ! empty( $u_field_setting->stripeKey ) && ! empty( $u_field_setting->stripeAccountId ) ) {
-			error_log( 'GF_M360: stripeKey already present, skipping fetch.' );
-			return is_array( $field_setting ) ? json_encode( $u_field_setting ) : $field_setting;
+			delete_transient( 'm360_stripe_not_configured' );
+			gf_m360()->log_debug( __METHOD__ . '(): stripeKey already present in payload, skipping API call.' );
+			return is_string( $field_setting ) ? $field_setting : json_encode( $u_field_setting );
 		}
 
-		error_log( 'GF_M360: Fetching Stripe details for account: ' . $u_field_setting->accountNumber );
+		// Use the numeric external account number — the Marketing360-Account header requires it.
+		$account_to_use = ! empty( $u_field_setting->externalAccountNumber_stored )
+			? $u_field_setting->externalAccountNumber_stored
+			: $u_field_setting->accountNumber;
+
+		gf_m360()->log_debug( __METHOD__ . '(): Fetching Stripe details for account: ' . $account_to_use );
 
 		$stripe_details = self::get_stripe_details(
 			$u_field_setting->client_id,
 			$u_field_setting->client_secret,
-			$u_field_setting->accountNumber
+			$account_to_use
 		);
 
 		if ( is_wp_error( $stripe_details ) ) {
-			error_log( 'GF_M360: Failed to fetch Stripe details. ' . $stripe_details->get_error_message() );
 			gf_m360()->log_error( __METHOD__ . '(): Failed to fetch Stripe details. ' . $stripe_details->get_error_message() );
-			return $field_setting;
+			// Persist the failure so the settings page can surface a clear error notice.
+			set_transient( 'm360_stripe_not_configured', $stripe_details->get_error_code(), 0 );
+			return is_string( $field_setting ) ? $field_setting : json_encode( $u_field_setting );
 		}
-
-		error_log( 'GF_M360: Stripe details response: ' . print_r( $stripe_details, true ) );
 
 		if ( empty( $stripe_details->stripeAccountId ) || empty( $stripe_details->stripeKey ) ) {
-			error_log( 'GF_M360: Stripe details response missing stripeAccountId or stripeKey. Full response: ' . print_r( $stripe_details, true ) );
 			gf_m360()->log_error( __METHOD__ . '(): Stripe details response missing stripeAccountId or stripeKey.' );
-			return $field_setting;
+			set_transient( 'm360_stripe_not_configured', 'missing_fields', 0 );
+			return is_string( $field_setting ) ? $field_setting : json_encode( $u_field_setting );
 		}
+
+		// Clear any prior error state.
+		delete_transient( 'm360_stripe_not_configured' );
 
 		$u_field_setting->stripeAccountId = $stripe_details->stripeAccountId;
 		$u_field_setting->stripeKey       = $stripe_details->stripeKey;
 
-		error_log( 'GF_M360: Stripe details saved successfully. stripeKey: ' . $u_field_setting->stripeKey );
+		gf_m360()->log_debug( __METHOD__ . '(): Stripe details saved successfully.' );
 
 		return json_encode( $u_field_setting );
 	}
@@ -525,28 +533,24 @@ class GF_Marketing_360_Payments
 		}
 	}
 
-	// Capture a Stripe Payment Intent inside M360.
-	public static function capture_payment_intent($intent_id)
-	{
-		$response = wp_remote_post(
-			self::get_route('payment_intents/' . $intent_id . '/capture'),
-			[
-				'method' => 'POST',
-				'headers' => self::get_m360_payments_request_headers()
-			]
-		);
+// Capture a Stripe Payment Intent inside M360.
+public static function capture_payment_intent($intent_id)
+{
+	$response = wp_remote_post(
+		self::get_route('payment_intents/' . $intent_id . '/capture'),
+		[
+			'method' => 'POST',
+			'headers' => self::get_m360_payments_request_headers()
+		]
+	);
 
-		$response_code = $response['response']['code'];
+	$response_code = $response['response']['code'];
 
-		if ($response_code !== 200) {
-			$error_message = json_decode($response['body']);
-			return new WP_Error($response_code, $error_message->error->message);
-		} else {
-			return json_decode($response['body'], true);
-		}
-<<<<<<< HEAD
-    }
-=======
+	if ($response_code !== 200) {
+		$error_message = json_decode($response['body']);
+		return new WP_Error($response_code, $error_message->error->message);
+	} else {
+		return json_decode($response['body'], true);
 	}
->>>>>>> a117f45 (fix: improve Stripe settings fetch, account header, and admin error notices)
+}
 }

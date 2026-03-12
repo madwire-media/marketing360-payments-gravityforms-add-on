@@ -95,16 +95,41 @@ class GF_Field_M360_CreditCard extends GF_Field
 
 		// If we are in the form editor, display a placeholder field.
 		if ($is_admin) {
-			// Display an ungenerated API token error.
-			if (empty($client_token)) {
+			// Display an error if no account is connected yet.
+			if ( empty( $client_token ) ) {
 				ob_start(); ?>
-<div class="notice notice-error inline">
-  <p><b>Hold up!</b> You haven't connected to a Marketing 360® account yet. Please <a
-      href="<?php esc_url( $settings_url ); ?>">check your Marketing 360® Payments settings</a>.</p>
-</div>
-<?php return ob_get_clean();
+				<div class="notice notice-error inline">
+					<p>
+						<strong><?php esc_html_e( 'Marketing 360® account not connected.', 'gravityformsm360' ); ?></strong>
+						<?php printf(
+							/* translators: 1: open link tag 2: close link tag */
+							__( 'Please %1$sconfigure your Marketing 360® Payments settings%2$s to get started.', 'gravityformsm360' ),
+							'<a href="' . esc_url( $settings_url ) . '">',
+							'</a>'
+						); ?>
+					</p>
+				</div>
+				<?php return ob_get_clean();
 			}
-			// Display a disabled placeholder field.
+			// Display a warning if the account is connected but Stripe is not yet configured.
+			if ( empty( $stripe_key ) ) {
+				ob_start(); ?>
+				<div class="notice notice-warning inline">
+					<p>
+						<strong><?php esc_html_e( 'Stripe not configured in your Marketing 360® account.', 'gravityformsm360' ); ?></strong>
+						<?php printf(
+							/* translators: 1,2: Payments app link 3,4: settings link */
+							__( 'Complete the Stripe Connect setup in the %1$sMarketing 360® Payments app%2$s, then return to %3$syour plugin settings%4$s and click "Update Settings".', 'gravityformsm360' ),
+							'<a href="https://app.marketing360.com" target="_blank" rel="noopener noreferrer">',
+							'</a>',
+							'<a href="' . esc_url( $settings_url ) . '">',
+							'</a>'
+						); ?>
+					</p>
+				</div>
+				<?php return ob_get_clean();
+			}
+			// Display a disabled placeholder Stripe card field.
 			ob_start(); ?>
 
 <div id="<?php esc_html_e( $card_wrap_id ); ?>"></div>
