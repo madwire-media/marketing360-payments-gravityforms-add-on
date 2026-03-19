@@ -48,7 +48,8 @@ class GF_M360_Bootstrap
 // Register the REST endpoint for testing the authorization credentials and returning a list of M360 Accounts.
 add_action('rest_api_init', function () {
 
-	require_once('classes/class-gf-marketing-360-payments.php');
+           require_once( GF_M360_PATH . 'classes/class-gf-marketing-360-payments.php' );
+
 
 	register_rest_route('gf_marketing_360_payments/' . GF_Marketing_360_Payments::VER, '/sign_in', array(
 		'methods' => 'POST',
