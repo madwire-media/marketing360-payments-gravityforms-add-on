@@ -4,7 +4,7 @@ Tags: donations, gravity forms, payment, payment gateway
 Requires at least: 6.0
 Tested up to: 6.9.4
 Requires PHP: 8.0
-Stable tag: 1.0.8
+Stable tag: 2.0
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,7 +62,7 @@ If you ever run into issues or you have questions, let us know!
 
 == Changelog ==
 
-= 1.0.8 =
+= 2.0 =
 * Fixed GET requests incorrectly sent as POST in customer lookup, 
   payment intent retrieval, Stripe details fetch, and accounts list
 * Fixed new customer creation being blocked by customer lookup 
