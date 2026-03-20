@@ -92,48 +92,50 @@ class GF_Field_M360_CreditCard extends GF_Field {
 			// Display an ungenerated API token error.
 			if (empty($client_token)) {
 				ob_start(); ?>
-					<div class="notice notice-error inline">
-					<p><b>Hold up!</b> You haven't connected to a Marketing 360® account yet. Please <a href="<?php esc_url( $settings_url ); ?>">check your Marketing 360® Payments settings</a>.</p>
-					</div>
-				<?php return ob_get_clean();
+<div class="notice notice-error inline">
+  <p><b>Hold up!</b> You haven't connected to a Marketing 360® account yet. Please <a
+      href="<?php esc_url( $settings_url ); ?>">check your Marketing 360® Payments settings</a>.</p>
+</div>
+<?php return ob_get_clean();
 			}
 			// Display a disabled placeholder field.
 			ob_start(); ?>
 
-				<div id="<?php esc_html_e( $card_wrap_id ); ?>"></div>
+<div id="<?php esc_html_e( $card_wrap_id ); ?>"></div>
 
-				<script>
-					TryMountCardAdminField("#<?php esc_html_e( $card_wrap_id ); ?>");
-				</script>
+<script>
+TryMountCardAdminField("#<?php esc_html_e( $card_wrap_id ); ?>");
+</script>
 
-			<?php return ob_get_clean();
+<?php return ob_get_clean();
 		} else if ($stripe_key) {
 			// If we're on the frontend and the Stripe key is valid, display the actual Stripe form. 
 			$input_id = $card_wrap_id . "_token_input";
 			ob_start(); ?>
 
-				<div id="<?php esc_html_e( $card_wrap_id ); ?>"></div>
-				<input id="<?php esc_html_e( $input_id ); ?>" type="hidden" name="stripe_response" value="<?php esc_html_e( $value ); ?>">
+<div id="<?php esc_html_e( $card_wrap_id ); ?>"></div>
+<input id="<?php esc_html_e( $input_id ); ?>" type="hidden" name="stripe_response"
+  value="<?php esc_html_e( $value ); ?>">
 
-				<script>
-					const stripeKey = "<?php esc_html_e( $stripe_key ); ?>";
-					const stripeAccountId = "<?php esc_html_e( $account_details->stripeAccountId ); ?>";
-					const stripe = Stripe(stripeKey, {
-						stripeAccount: stripeAccountId
-					});
-					const elements = stripe.elements();
-					const cardElement = elements.create('card');
-					cardElement.mount("#<?php esc_html_e( $card_wrap_id ); ?>");
+<script>
+const stripeKey = "<?php esc_html_e( $stripe_key ); ?>";
+const stripeAccountId = "<?php esc_html_e( $account_details->stripeAccountId ); ?>";
+const stripe = Stripe(stripeKey, {
+  stripeAccount: stripeAccountId
+});
+const elements = stripe.elements();
+const cardElement = elements.create('card');
+cardElement.mount("#<?php esc_html_e( $card_wrap_id ); ?>");
 
-					cardElement.on('change', event => {
+cardElement.on('change', event => {
 
-						stripe.createToken(cardElement).then(result => {
-							jQuery('#<?php esc_html_e( $input_id ); ?>').val(JSON.stringify(result));
-						})
-					})
-				</script>
+  stripe.createToken(cardElement).then(result => {
+    jQuery('#<?php esc_html_e( $input_id ); ?>').val(JSON.stringify(result));
+  })
+})
+</script>
 
-			<?php return ob_get_clean();
+<?php return ob_get_clean();
 		}
 	}
 }

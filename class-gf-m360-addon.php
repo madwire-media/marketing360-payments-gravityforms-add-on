@@ -95,20 +95,22 @@ class GF_M360_AddOn extends GFPaymentAddOn {
     // The markup for the "api_connection_check" plugin setting field
     public function settings_api_connection_check($field) {
         ob_start(); ?>
-        <?php $this->settings_hidden($field);
+<?php $this->settings_hidden($field);
             $details = $this->get_account_details();
             $button_text = ($details) ? 'Connect to a different Marketing 360® account' : 'Connect to your Marketing 360® account'; ?>
-            <div id="gf-m360-notice-box">
-                <?php if ($details): ?>
-                    <p><?php echo sprintf( __( 'Currently connected to Marketing 360® account: %s %s. ', 'gravityformsm360' ), esc_html( $details->externalAccountNumber ), esc_html( $details->displayName ));?><a href="#" onclick="m360SignOut()">Disconnect Account</a></p>
-                <?php endif; ?>
-            </div>
+<div id="gf-m360-notice-box">
+  <?php if ($details): ?>
+  <p>
+    <?php echo sprintf( __( 'Currently connected to Marketing 360® account: %s %s. ', 'gravityformsm360' ), esc_html( $details->externalAccountNumber ), esc_html( $details->displayName ));?><a
+      href="#" onclick="m360SignOut()">Disconnect Account</a></p>
+  <?php endif; ?>
+</div>
 
-            <button id="gf-m360-api-auth" class="button-secondary">
-                <?php echo esc_html($button_text); ?>
-            </button>
+<button id="gf-m360-api-auth" class="button-secondary">
+  <?php echo esc_html($button_text); ?>
+</button>
 
-        <?php echo ob_get_clean();
+<?php echo ob_get_clean();
     }
 
     // Register global settings for the Add-On

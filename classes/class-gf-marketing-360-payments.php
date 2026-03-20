@@ -196,18 +196,18 @@ class GF_Marketing_360_Payments {
 					$account->payload = serialize($account);
 
 					ob_start(); ?>
-						<div class="m360-account">
-							<?php if ($account->accountIcon): ?>
-								<div class="m360-account-icon">
-									<img src="<?php echo esc_url($account->accountIcon); ?>">
-								</div>
-							<?php endif; ?>
-							<div class="m360-account-info">
-								<h2 class="display-name"><?php echo esc_html($account->displayName); ?></h2>
-								<h3 class="account-number"><?php echo esc_html($account->externalAccountNumber); ?></h3>
-							</div>
-						</div>
-					<?php $account->html = ob_get_clean();
+<div class="m360-account">
+  <?php if ($account->accountIcon): ?>
+  <div class="m360-account-icon">
+    <img src="<?php echo esc_url($account->accountIcon); ?>">
+  </div>
+  <?php endif; ?>
+  <div class="m360-account-info">
+    <h2 class="display-name"><?php echo esc_html($account->displayName); ?></h2>
+    <h3 class="account-number"><?php echo esc_html($account->externalAccountNumber); ?></h3>
+  </div>
+</div>
+<?php $account->html = ob_get_clean();
 				}
 			}
 
@@ -329,6 +329,11 @@ class GF_Marketing_360_Payments {
 				'headers' => self::get_m360_payments_request_headers()
 			]
 		);
+
+		if (is_wp_error($response)) {
+			error_log("Error during customer lookup: " . $response->get_error_message());
+			return $response;
+		}
 
 		$response_code = $response['response']['code'];
 
@@ -464,4 +469,3 @@ class GF_Marketing_360_Payments {
 		}
     }
 }
-
