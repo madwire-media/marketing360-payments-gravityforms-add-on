@@ -1,10 +1,10 @@
 === Marketing 360® Payments for Gravity Forms ===
 Contributors: marketing360payments
 Tags: donations, gravity forms, payment, payment gateway
-Requires at least: 6.0
-Tested up to: 6.9.4
-Requires PHP: 8.0
-Stable tag: 2.0
+Requires at least: 6.4
+Tested up to: 6.6.2
+Requires PHP: 7.0
+Stable tag: 1.0.5
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -59,15 +59,3 @@ If you ever run into issues or you have questions, let us know!
 1. Connecting your website to your Marketing 360® account takes just seconds.
 2. Include a product, credit card, and total field in each payment form.
 3. Each customer that submits a payment will display in the Marketing 360® Payments app
-
-== Changelog ==
-
-= 2.0 =
-* Fixed GET requests incorrectly sent as POST in customer lookup, 
-  payment intent retrieval, Stripe details fetch, and accounts list
-* Fixed new customer creation being blocked by customer lookup 
-  treating empty responses as fatal errors
-* Fixed card tokenization race condition causing payment failures 
-  on form submission
-* Fixed Stripe key and account ID not persisting after account 
-  connection, preventing card field from loading on the frontend
