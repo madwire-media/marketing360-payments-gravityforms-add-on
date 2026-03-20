@@ -4,7 +4,7 @@ Tags: donations, gravity forms, payment, payment gateway
 Requires at least: 6.0
 Tested up to: 6.9.4
 Requires PHP: 8.0
-Stable tag: 2.0
+Stable tag: 2.0.1
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
