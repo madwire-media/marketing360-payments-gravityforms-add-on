@@ -176,7 +176,6 @@ class GF_Marketing_360_Payments
 	public static function rest_list_m360_accounts(WP_REST_Request $request)
 	{
 
-
 		$nonce = $request->get_header('X-WP-Nonce');
 		if (!wp_verify_nonce($nonce, 'wp_rest')) {
 			return new WP_REST_Response('Forbidden', 403);
@@ -213,6 +212,18 @@ class GF_Marketing_360_Payments
 					$account->client_secret = $details->secret;
 					// Store the numeric external account number so the callback can pass it as the Marketing360-Account header.
 					$account->externalAccountNumber_stored = $account->externalAccountNumber;
+
+					// Fetch Stripe details using the login token before building the payload
+					// so stripeKey and stripeAccountId are baked in from the start.
+					$stripe_details = self::get_stripe_details_with_token(
+						$token,
+						$account->accountNumber
+					);
+					if ( ! is_wp_error( $stripe_details ) && ! empty( $stripe_details->stripeKey ) ) {
+						$account->stripeKey       = $stripe_details->stripeKey;
+						$account->stripeAccountId = $stripe_details->stripeAccountId;
+					}
+
 					$account->payload = json_encode($account);
 
 					ob_start(); ?>
@@ -238,16 +249,13 @@ class GF_Marketing_360_Payments
 	// Get the list of authorized M360 accounts using the token.
 	public static function get_m360_accounts($token)
 	{
-		$response = wp_remote_post(
-			self::$accounts_url,
+		$response = wp_remote_get(
+			self::$accounts_url . '?limit=999',
 			[
-				'method' => 'GET',
+				'timeout' => 45,
 				'headers' => [
 					'Authorization' => "Bearer {$token}"
 				],
-				'body' => [
-					'limit' => 999
-				]
 			]
 		);
 
@@ -278,12 +286,12 @@ class GF_Marketing_360_Payments
 		);
 
 		if (is_wp_error($response)) {
-			return $response->get_error_message();
+			return new WP_Error( 'request_failed', $response->get_error_message() );
 		}
 
 		$response_code = $response['response']['code'];
 
-		if ($response_code !== 201) {
+		if ($response_code !== 201 && $response_code !== 200) {
 			$error_message = $response['response']['message'];
 			return new WP_Error($response_code, $error_message);
 		} else {
@@ -292,19 +300,12 @@ class GF_Marketing_360_Payments
 		}
 	}
 
-	// Get the Stripe details for the M360 Account using Account Number, ID, and Secret
-	public static function get_stripe_details($client_id, $client_secret, $account)
+	// Get Stripe details using a pre-existing login token (used during account connection flow).
+	public static function get_stripe_details_with_token($token, $account)
 	{
-		$token = self::id_secret_get_access_token($client_id, $client_secret);
-
-		if (is_wp_error($token)) {
-			return $token;
-		}
-
-		$response = wp_remote_post(
+		$response = wp_remote_get(
 			self::get_payments_url() . '/' . self::VER . '/api/account',
 			[
-				'method'  => 'GET',
 				'timeout' => 45,
 				'headers' => self::get_m360_payments_request_headers($token, $account),
 			]
@@ -321,6 +322,18 @@ class GF_Marketing_360_Payments
 		}
 
 		return json_decode($response['body']);
+	}
+
+	// Get the Stripe details for the M360 Account using Account Number, ID, and Secret
+	public static function get_stripe_details($client_id, $client_secret, $account)
+	{
+		$token = self::id_secret_get_access_token($client_id, $client_secret);
+
+		if (is_wp_error($token)) {
+			return $token;
+		}
+
+		return self::get_stripe_details_with_token($token, $account);
 	}
 
 	// Callback to add the Stripe details to the M360 Account details after clicking "Update Settings" in the Add-On Settings Screen
@@ -370,7 +383,6 @@ class GF_Marketing_360_Payments
 
 		if ( is_wp_error( $stripe_details ) ) {
 			gf_m360()->log_error( __METHOD__ . '(): Failed to fetch Stripe details. ' . $stripe_details->get_error_message() );
-			// Persist the failure so the settings page can surface a clear error notice.
 			set_transient( 'm360_stripe_not_configured', $stripe_details->get_error_code(), 0 );
 			return is_string( $field_setting ) ? $field_setting : json_encode( $u_field_setting );
 		}
@@ -395,15 +407,20 @@ class GF_Marketing_360_Payments
 	// Look up if a customer's email address already exists in M360.
 	public static function customer_lookup($email)
 	{
-		$response = wp_remote_post(
-			self::get_route('customers') . "?email=" . $email,
+		$response = wp_remote_get(
+			self::get_route('customers') . '?email=' . rawurlencode( $email ),
 			[
-				'method' => 'GET',
+				'timeout' => 45,
 				'headers' => self::get_m360_payments_request_headers()
 			]
 		);
 
 		$response_code = $response['response']['code'];
+
+		if ($response_code === 400 || $response_code === 404) {
+			// Treat as "no customer found" rather than a fatal error.
+			return [];
+		}
 
 		if ($response_code !== 200) {
 			$error_message = json_decode($response['body']);
@@ -419,7 +436,7 @@ class GF_Marketing_360_Payments
 		$response = wp_remote_post(
 			self::get_route('customers'),
 			[
-				'method' => 'POST',
+				'timeout' => 45,
 				'headers' => self::get_m360_payments_request_headers(),
 				'body' => [
 					'email' => $email
@@ -440,8 +457,8 @@ class GF_Marketing_360_Payments
 	// Get the customer ID in M360 using email address. If the provided email doesn't exist in M360, a new customer is created and their ID is returned.
 	public static function get_customer_id($email)
 	{
-		    $email = sanitize_email( $email );
-    		$customers = self::customer_lookup($email);
+		$email     = sanitize_email( $email );
+		$customers = self::customer_lookup($email);
 
 		if (is_wp_error($customers)) {
 			gf_m360()->log_error(__METHOD__ . '(): Customer lookup failed for email: ' . $email . '. ' . $customers->get_error_message());
@@ -470,7 +487,7 @@ class GF_Marketing_360_Payments
 		$response = wp_remote_post(
 			self::get_route('payment_intents'),
 			[
-				'method' => 'POST',
+				'timeout' => 45,
 				'headers' => self::get_m360_payments_request_headers(),
 				'body' => $args
 			]
@@ -489,10 +506,10 @@ class GF_Marketing_360_Payments
 	// Get a Stripe Payment Intent from M360.
 	public static function get_payment_intent($intent_id)
 	{
-		$response = wp_remote_post(
+		$response = wp_remote_get(
 			self::get_route('payment_intents/' . $intent_id),
 			[
-				'method' => 'GET',
+				'timeout' => 45,
 				'headers' => self::get_m360_payments_request_headers(),
 			]
 		);
@@ -513,7 +530,7 @@ class GF_Marketing_360_Payments
 		$response = wp_remote_post(
 			self::get_route('payment_intents/' . $intent_id . '/confirm'),
 			[
-				'method' => 'POST',
+				'timeout' => 45,
 				'headers' => self::get_m360_payments_request_headers()
 			]
 		);
@@ -534,7 +551,7 @@ class GF_Marketing_360_Payments
 		$response = wp_remote_post(
 			self::get_route('payment_intents/' . $intent_id . '/capture'),
 			[
-				'method' => 'POST',
+				'timeout' => 45,
 				'headers' => self::get_m360_payments_request_headers()
 			]
 		);
@@ -549,4 +566,3 @@ class GF_Marketing_360_Payments
 		}
 	}
 }
-
